@@ -1,0 +1,172 @@
+---
+title: "R Session 1 - Public Houses per 1,000 population"
+author: "Michael Sinclair"
+date: "4 October 2018"
+output: word_document
+---
+
+
+# Introduction to R - Session 1
+
+In this introductory session we are going to be loading a comma seperated value text file (csv) in to R, carrying out a simple calculation and saving the data back to a new csv file.
+
+We will be using base R for all of today's exercise. We will look into using libraries in the next session.
+
+We will be taking the following steps;    
+
+* Load data in to R
+* Carry out simple calculation
+* Use a very simple plot to explore the data
+* Save dataframe back to csv file
+
+# Working directory
+
+It is possible to work in R without doing this by providing the full path to each file that you intend to work with. This can however increase the amount of code that you need to use and can also lead to files accidentally being saved in the wrong folder and potentially getting lost.
+
+To set the working directory we will use the _setwd( )_ command.
+
+```{r setwd}
+# You can either use a forward slash ( / ) or a double backslash ( \\ )
+
+setwd('//dsfin/corpcom/LBBDR/TNG/Session 1') 
+```
+
+To check the active directory that you are working in you can use the _getwd( )_ command. This will return the current working directory.
+
+```{r getwd}
+getwd()
+```
+
+
+# Load data in to R
+
+We will use the _read.csv( )_ command to load data in to R from a csv file.
+
+## Assignment operator
+
+When we load the data in to R we will assign it to a variable which we will call _df_ as the data type we will be using is a __dataframe__. 
+
+In R there are two wasy of doing this. The standard way is to use the _<-_ symbol. This is the method that is widely used and the short cut to place this symbol is __ALT__ + __-__.
+
+R will also accept the _=_ symbol as is used in other programming languages.
+
+## Data Frame
+
+A DataFrame is a special tabular data type, similar to a spreadsheet, which can be used to store data in rows and columns. Each column in a dataframe can hold a different type of data such as characters, numerical data and boolean (True / False).
+
+```{r readData}
+df <- read.csv('session1.csv')
+```
+
+
+### Head()
+
+Once you have read in the data use the _head( )_ command to explore the top rows of the dataframe. By default this shows the top 6 rows, however you can provide an additional arguement to the head() function to provide more or less.
+
+```{r head}
+head(df) #You can also use tail(df) to view the bottom of the dataframe
+```
+
+
+## Working with dataframes
+
+There are two ways to work with a dataframe these are using _names_ or _indexes_ for the rows and columns.
+
+In order to select the first column from the data you can select by name by using the _$_ sign as follows.
+
+```{r usingdollar}
+df$area
+```
+
+Or you can use the column index, in this case the index is 1. Enclose this in square brackets as follows.
+
+Use a single set of square brackets to access the column of data _[1]_ and double square brackates to access the actual figures _[[1]]_.
+
+```{r usingbrackets}
+df[[1]]
+```
+
+# Basic calculations
+
+In today's example we will be carrying out a calculation using two columns from the dataframe to caculate the number of public houses per London borough per 1,000 population.
+
+To do this we will use the following calculation
+
+$$PHperThousand = \frac{PublicHouses}{Population} * 1000$$
+
+We will carryout this calculation and save it as a new column within the dataframe _(df)_.
+
+```{r simplecalculation}
+df$PHper1000_2006 <- (df$ph2006 / df$population2006) * 1000
+df$PHper1000_2016 <- (df$ph2016 / df$population2016) * 1000
+
+head(df) #use head() to see the two new columns
+```
+
+# Some basic plots
+
+## Distribution 
+
+A boxplot is a very good way to look at the distribution of one or more numberical datasets.
+
+A box plot will show us the distribution of the data and help us to identify whether we have any outliers.
+
+```{r box1}
+boxplot(df$PHper1000_2016, main='Public Houses per 1,000 population (2016)', ylab='Rate per 1,000 population')
+
+```
+
+In this example there is an extreme outlier, City of London, who have a very small population of `r df$population2016[1]` and `r df$ph2016[1]` public houses.
+
+We can remove this outlier by removing the first row of the dataframe. 
+
+When selecting columns and rows from a dataframe use the square bracket method in a dataframe[row, column] format.
+
+If you leave either the row value or coumn value blank you are selecting __all__ rows or columns.
+
+If you use a minus _(-)_ symbol you are select all rows / columns but the one(s) you mention.
+
+Therefore we remove the first row as follows. Don't forget to assign the filtered dataframe back to the varaible df.
+
+```{r remove CityOLondon}
+df <- df[-1, ]
+```
+
+Display the boxplot again to see if it has improved.
+
+We can also pass more than one column into the boxplot function to compare two years. The following chart compares 2006 and 2016 data.
+
+```{r box2}
+boxplot(df[6:7], main='Public Houses per 1,000 population (2006 and 2016)', ylab='Rate per 1,000 population')
+```
+
+We can see that there is still a single outlier (Westminster) however depending on our analysis we may want to keep that is the data.
+
+## Bar chart
+
+You may want to see a bar plot of the data for each London borough.
+
+In today's session we will do this displaying the boroughs in alphabetical order. In future sessions we will explore sorting the data before plotting.
+
+```{r barplot, fig.width=18, fig.height=10}
+barplot(height = df$PHper1000_2016, names.arg = substr(df$area, 1, 3), main = 'Number of Public Houses per 1,000 residents (2016)', xlab='London Borough Truncated', ylab='Rate per 1,000 residents')
+```
+
+# Save data to csv
+
+Now we have created new data we can save it to a new csv file. In this case the processing has not been very difficult but it is standard practice to keep your original data unmodified and to then keep a _'clean'_ version of the data and possibly a _modelled_ or _processed_ version also.
+
+To do this we will use the _write.csv( )_ command. This command requires two arguements the data to be written and the file is to be written to.
+
+By default R will include the row names in the first column of the saved csv file. In order to prvent this provide the additional arguement _row.names = FALSE_ when writing the csv file.
+
+Also note that R will over write any file that you instruct it to without a warning. _Please be careful!_
+
+```{r savecsv}
+write.csv(df, 'session 1 data with rate.csv', row.names = FALSE)
+```
+
+
+
+
+
